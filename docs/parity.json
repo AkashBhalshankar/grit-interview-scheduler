@@ -1,0 +1,284 @@
+{
+ "messages": [
+  {
+   "fn": "booking_confirmed",
+   "args": [
+    "AI Product Mastery",
+    "Novice",
+    {
+     "ms": 1795170600000
+    },
+    "Priya Nair"
+   ],
+   "out": [
+    "Interview booked",
+    "You're booked! Your AI Product Mastery Novice interview is on Fri 20 Nov, 4:00 PM IST with Priya Nair. Your join link appears here 15 minutes before the start. Keep your camera on and carry a valid ID. You can reschedule until Fri 20 Nov, 10:00 AM IST."
+   ]
+  },
+  {
+   "fn": "result_pass",
+   "args": [
+    "AI Product Mastery",
+    "Novice"
+   ],
+   "out": [
+    "You passed!",
+    "Cleared for takeoff! You passed the AI Product Mastery Novice interview. Your Miles and Novice Badge are now on your dashboard."
+   ]
+  },
+  {
+   "fn": "result_retake",
+   "args": [
+    "AI Product Mastery",
+    "Novice",
+    "Revisit prompt design and evaluation basics.",
+    {
+     "ms": 1796364000000
+    }
+   ],
+   "out": [
+    "Retake later",
+    "Not a pass yet, but you're close. Your interviewer has asked for a retake on or after 4 Dec. Feedback: \"Revisit prompt design and evaluation basics.\" Your cleared skills stay safe. You can book a new slot from 4 Dec, with a different interviewer."
+   ]
+  },
+  {
+   "fn": "result_fail",
+   "args": [
+    "AI Product Mastery",
+    "Novice",
+    "Revisit state management.",
+    {
+     "ms": 1796364000000
+    },
+    2
+   ],
+   "out": [
+    "Not cleared this time",
+    "You didn't clear the AI Product Mastery Novice interview this time. Feedback: \"Revisit state management.\" Your cleared skills stay safe. You can book again from 4 Dec. Attempts left: 2."
+   ]
+  },
+  {
+   "fn": "slot_released",
+   "args": [
+    {
+     "ms": 1795170600000
+    }
+   ],
+   "out": [
+    "Your interview slot was cancelled",
+    "Your interviewer can't make the Fri 20 Nov, 4:00 PM IST slot, so it has been cancelled. This isn't your fault and it doesn't count as an attempt. Your booking is open again, so please pick a new slot."
+   ]
+  },
+  {
+   "fn": "cancelled_by_student",
+   "args": [
+    {
+     "ms": 1795170600000
+    }
+   ],
+   "out": [
+    "Booking cancelled",
+    "Your Fri 20 Nov, 4:00 PM IST interview is cancelled. You can book a new slot any time."
+   ]
+  },
+  {
+   "fn": "no_show",
+   "args": [
+    {
+     "ms": 1795170600000
+    },
+    {
+     "ms": 1796364000000
+    }
+   ],
+   "out": [
+    "Interview missed",
+    "You missed your Fri 20 Nov, 4:00 PM IST interview. You can book again from 4 Dec. Repeated no-shows increase the wait."
+   ]
+  },
+  {
+   "fn": "cooldown_over",
+   "args": [
+    "AI Product Mastery",
+    "Novice"
+   ],
+   "out": [
+    "You can book again",
+    "Your wait is over. Pick a new AI Product Mastery Novice interview slot from your dashboard."
+   ]
+  },
+  {
+   "fn": "skills_completed",
+   "args": [
+    "AI Product Mastery",
+    "Novice"
+   ],
+   "out": [
+    "Interview unlocked",
+    "All skills for the AI Product Mastery Novice Badge are cleared. Book your interview to claim it."
+   ]
+  },
+  {
+   "fn": "nullified",
+   "args": [
+    "AI Product Mastery",
+    "Novice",
+    "Answers were read from a second screen"
+   ],
+   "out": [
+    "Badge nullified",
+    "Your AI Product Mastery Novice Badge and its Miles have been nullified after a malpractice review. Reason: Answers were read from a second screen. If you think this is a mistake, contact the GRIT team within 7 days."
+   ]
+  },
+  {
+   "fn": "on_hold",
+   "args": [
+    "AI Product Mastery",
+    "Novice"
+   ],
+   "out": [
+    "Interview on hold",
+    "Your AI Product Mastery Novice interview is on hold while the GRIT team reviews your account. Any booked slot has been released. The team will contact you."
+   ]
+  },
+  {
+   "fn": "reinstated",
+   "args": [
+    "AI Product Mastery",
+    "Novice"
+   ],
+   "out": [
+    "Hold lifted",
+    "The review is complete and your hold is lifted. You can book your AI Product Mastery Novice interview again."
+   ]
+  },
+  {
+   "fn": "overturned",
+   "args": [
+    "AI Product Mastery",
+    "Novice"
+   ],
+   "out": [
+    "Badge restored",
+    "Your appeal was upheld. Your AI Product Mastery Novice Badge and Miles are restored."
+   ]
+  },
+  {
+   "fn": "reminder",
+   "args": [
+    "AI Product Mastery",
+    "Novice",
+    12
+   ],
+   "out": [
+    "Time to book your interview",
+    "You've cleared every skill for the AI Product Mastery Novice Badge. The last step is a quick interview, and 12 slots are open this week. Book one from your dashboard."
+   ]
+  },
+  {
+   "fn": "skill_invalidated",
+   "args": [
+    "AI Product Mastery",
+    "Novice",
+    "UI Engineering L2"
+   ],
+   "out": [
+    "Interview on pause",
+    "A result for UI Engineering L2 changed, so the AI Product Mastery Novice interview is paused. Any booked slot has been released. Clear the skill again to unlock your interview."
+   ]
+  }
+ ],
+ "transitions": [
+  "BOOKED|CANCEL|ELIGIBLE",
+  "BOOKED|FAIL|FAILED",
+  "BOOKED|FLAG_MALPRACTICE|ON_HOLD",
+  "BOOKED|NO_SHOW|RETAKE_PENDING",
+  "BOOKED|PASS|PASSED",
+  "BOOKED|RETAKE|RETAKE_PENDING",
+  "BOOKED|SKILL_INVALIDATED|NOT_ELIGIBLE",
+  "ELIGIBLE|BOOK|BOOKED",
+  "ELIGIBLE|FLAG_MALPRACTICE|ON_HOLD",
+  "ELIGIBLE|SKILL_INVALIDATED|NOT_ELIGIBLE",
+  "FAILED|COOLDOWN_ELAPSED|ELIGIBLE",
+  "FAILED|FLAG_MALPRACTICE|ON_HOLD",
+  "FAILED|SKILL_INVALIDATED|NOT_ELIGIBLE",
+  "NOT_ELIGIBLE|FLAG_MALPRACTICE|ON_HOLD",
+  "NOT_ELIGIBLE|SKILLS_COMPLETED|ELIGIBLE",
+  "NULLIFIED|OVERTURN|PASSED",
+  "ON_HOLD|REINSTATE|ELIGIBLE",
+  "PASSED|FLAG_MALPRACTICE|NULLIFIED",
+  "RETAKE_PENDING|COOLDOWN_ELAPSED|ELIGIBLE",
+  "RETAKE_PENDING|FLAG_MALPRACTICE|ON_HOLD",
+  "RETAKE_PENDING|SKILL_INVALIDATED|NOT_ELIGIBLE"
+ ],
+ "suggest": {
+  "now": 1794546000000,
+  "slots": [
+   {
+    "id": "s0",
+    "interviewer_id": "a",
+    "starts_at": 1794632400000
+   },
+   {
+    "id": "s1",
+    "interviewer_id": "b",
+    "starts_at": 1794636000000
+   },
+   {
+    "id": "s2",
+    "interviewer_id": "a",
+    "starts_at": 1794715200000
+   },
+   {
+    "id": "s3",
+    "interviewer_id": "c",
+    "starts_at": 1794736800000
+   },
+   {
+    "id": "s4",
+    "interviewer_id": "b",
+    "starts_at": 1794830400000
+   },
+   {
+    "id": "s5",
+    "interviewer_id": "a",
+    "starts_at": 1794891600000
+   },
+   {
+    "id": "s6",
+    "interviewer_id": "c",
+    "starts_at": 1794898800000
+   }
+  ],
+  "load": {
+   "a": 5,
+   "b": 1
+  },
+  "out": [
+   {
+    "slot_id": "s1",
+    "score": 63.67,
+    "reasons": [
+     "Daytime slot (10 AM to 6 PM)",
+     "Interviewer has a light schedule"
+    ]
+   },
+   {
+    "slot_id": "s3",
+    "score": 57.33,
+    "reasons": [
+     "Daytime slot (10 AM to 6 PM)",
+     "Interviewer has a light schedule"
+    ]
+   },
+   {
+    "slot_id": "s0",
+    "score": 52.0,
+    "reasons": [
+     "Earliest available",
+     "Daytime slot (10 AM to 6 PM)"
+    ]
+   }
+  ]
+ }
+}

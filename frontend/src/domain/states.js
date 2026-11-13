@@ -1,0 +1,39 @@
+// Mirror of backend/app/states.py. A parity test fails if the two tables ever drift.
+import { RuleError } from './rules.js';
+
+export const S = Object.freeze({
+  NOT_ELIGIBLE: 'NOT_ELIGIBLE', ELIGIBLE: 'ELIGIBLE', BOOKED: 'BOOKED', PASSED: 'PASSED', FAILED: 'FAILED',
+  RETAKE_PENDING: 'RETAKE_PENDING', NULLIFIED: 'NULLIFIED', ON_HOLD: 'ON_HOLD',
+});
+
+export const TRANSITIONS = {
+  'NOT_ELIGIBLE|SKILLS_COMPLETED': S.ELIGIBLE,
+  'ELIGIBLE|BOOK': S.BOOKED,
+  'BOOKED|CANCEL': S.ELIGIBLE,
+  'BOOKED|PASS': S.PASSED,
+  'BOOKED|FAIL': S.FAILED,
+  'BOOKED|RETAKE': S.RETAKE_PENDING,
+  'BOOKED|NO_SHOW': S.RETAKE_PENDING,
+  'RETAKE_PENDING|COOLDOWN_ELAPSED': S.ELIGIBLE,
+  'FAILED|COOLDOWN_ELAPSED': S.ELIGIBLE,
+  'ELIGIBLE|SKILL_INVALIDATED': S.NOT_ELIGIBLE,
+  'BOOKED|SKILL_INVALIDATED': S.NOT_ELIGIBLE,
+  'RETAKE_PENDING|SKILL_INVALIDATED': S.NOT_ELIGIBLE,
+  'FAILED|SKILL_INVALIDATED': S.NOT_ELIGIBLE,
+  'PASSED|FLAG_MALPRACTICE': S.NULLIFIED,
+  'NOT_ELIGIBLE|FLAG_MALPRACTICE': S.ON_HOLD,
+  'ELIGIBLE|FLAG_MALPRACTICE': S.ON_HOLD,
+  'BOOKED|FLAG_MALPRACTICE': S.ON_HOLD,
+  'FAILED|FLAG_MALPRACTICE': S.ON_HOLD,
+  'RETAKE_PENDING|FLAG_MALPRACTICE': S.ON_HOLD,
+  'ON_HOLD|REINSTATE': S.ELIGIBLE,
+  'NULLIFIED|OVERTURN': S.PASSED,
+};
+
+export function nextState(state, event) {
+  const to = TRANSITIONS[`${state}|${event}`];
+  if (!to) throw new RuleError('ILLEGAL_TRANSITION', `Cannot apply '${event}' while the student is ${state}.`, 409);
+  return to;
+}
+export const allowedEvents = (state) =>
+  Object.keys(TRANSITIONS).filter((k) => k.startsWith(`${state}|`)).map((k) => k.split('|')[1]).sort();

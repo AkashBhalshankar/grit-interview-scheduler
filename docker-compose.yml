@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: grit }
+    ports: ["5432:5432"]
+  api:
+    build: ./backend
+    environment: { DATABASE_URL: "postgresql+psycopg://postgres:postgres@db:5432/grit", DEMO_MODE: "1" }
+    ports: ["8000:8000"]
+    depends_on: [db]
+  web:
+    image: node:22-alpine
+    working_dir: /web
+    volumes: ["./frontend:/web"]
+    command: sh -c "npm install && npm run build && npx --yes serve dist -l 5173"
+    ports: ["5173:5173"]
