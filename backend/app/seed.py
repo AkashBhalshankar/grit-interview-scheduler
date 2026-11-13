@@ -68,8 +68,9 @@ def seed(db, now: datetime):
     student("stu_ishaan", "Ishaan Verma", 2023, "NULLIFIED", nullified_at=now - timedelta(days=1), state_reason="Answers were read from a hidden second screen.")
     student("stu_ananya", "Ananya Gupta", 2024, "ON_HOLD", state_reason="Contest submission matched another student.")
     db.flush()
+    db.commit()
 
-    # Then Bookings and Interviews
+    # 2. Bookings and Interviews
     b_kabir, sl_kabir = book("stu_kabir", "iv_priya", at(1, 11), "active")
     soon = (now + timedelta(minutes=40)).replace(second=0, microsecond=0); soon += timedelta(minutes=(30 - soon.minute % 30) % 30)
     book("stu_neha", "iv_rahul", soon, "active")
@@ -79,13 +80,18 @@ def seed(db, now: datetime):
     b_rohan, sl_rohan = book("stu_rohan", "iv_rahul", at(-2, 12), "completed"); r_rohan = result(b_rohan, sl_rohan, "fail", "Revisit state management and error handling.")
     b_sneha, sl_sneha = book("stu_sneha", "iv_sana", at(-1, 16, 30), "completed"); r_sneha = result(b_sneha, sl_sneha, "retake", "Solid UI work. Revisit prompt design and evaluation basics.")
     b_vikram, sl_vikram = book("stu_vikram", "iv_priya", at(-1, 10, 30), "no_show"); r_vikram = result(b_vikram, sl_vikram, "no_show")
+    
+    db.flush()
+    db.commit()
 
-    # Update Student fields with results
+    # 3. Update student state
     db.query(Student).filter(Student.id == "stu_meera").update({"badge_awarded_at": r_meera})
     db.query(Student).filter(Student.id == "stu_rohan").update({"next_eligible_at": r_rohan + timedelta(days=POLICY.fail_cooldown_days)})
     db.query(Student).filter(Student.id == "stu_sneha").update({"next_eligible_at": r_sneha + timedelta(days=POLICY.retake_cooldown_days)})
     db.query(Student).filter(Student.id == "stu_vikram").update({"next_eligible_at": r_vikram + timedelta(days=POLICY.no_show_cooldown_days)})
+    
     db.flush()
+    db.commit()
 
 
 if __name__ == "__main__":
