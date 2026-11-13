@@ -52,7 +52,10 @@ def seed(db, now: datetime):
         r = sl.ends_at + timedelta(minutes=5); db.add(Interview(id=f"in_{b.id}", booking_id=b.id, interviewer_id=sl.interviewer_id, outcome=outcome, notes=notes, recorded_at=r, recorded_by=sl.interviewer_id)); return r
 
     for sid, name, batch, days in [("stu_aarav", "Aarav Mehta", 2024, 2), ("stu_tanvi", "Tanvi Rao", 2024, 1), ("stu_harsh", "Harsh Patel", 2023, 6)]:
-        student(sid, name, batch, "ELIGIBLE"); note(sid, "skills_completed", messages.skills_completed(TRACK, BADGE), now - timedelta(days=days))
+        student(sid, name, batch, "ELIGIBLE")
+    db.flush()
+    for sid, name, batch, days in [("stu_aarav", "Aarav Mehta", 2024, 2), ("stu_tanvi", "Tanvi Rao", 2024, 1), ("stu_harsh", "Harsh Patel", 2023, 6)]:
+        note(sid, "skills_completed", messages.skills_completed(TRACK, BADGE), now - timedelta(days=days))
     student("stu_diya", "Diya Kapoor", 2025, "NOT_ELIGIBLE", 3); student("stu_ritu", "Ritu Sharma", 2025, "NOT_ELIGIBLE", 2)
     db.flush()
     b, sl = book("stu_kabir", "iv_priya", at(1, 11), "active"); student("stu_kabir", "Kabir Singh", 2024, "BOOKED")
