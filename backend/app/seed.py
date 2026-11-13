@@ -76,6 +76,9 @@ def seed(db, now: datetime):
     book("stu_neha", "iv_rahul", soon, "active")
     book("stu_dev", "iv_sana", at(-2, 17), "active")
     
+    # We must explicitly flush to ensure bookings and interviews exist
+    db.flush()
+    
     b_meera, sl_meera = book("stu_meera", "iv_priya", at(-3, 11), "completed"); r_meera = result(b_meera, sl_meera, "pass", "Strong fundamentals.")
     b_rohan, sl_rohan = book("stu_rohan", "iv_rahul", at(-2, 12), "completed"); r_rohan = result(b_rohan, sl_rohan, "fail", "Revisit state management and error handling.")
     b_sneha, sl_sneha = book("stu_sneha", "iv_sana", at(-1, 16, 30), "completed"); r_sneha = result(b_sneha, sl_sneha, "retake", "Solid UI work. Revisit prompt design and evaluation basics.")
