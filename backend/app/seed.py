@@ -90,7 +90,6 @@ def seed(db, now: datetime):
     db.query(Student).filter(Student.id == "stu_sneha").update({"next_eligible_at": r_sneha + timedelta(days=POLICY.retake_cooldown_days)})
     db.query(Student).filter(Student.id == "stu_vikram").update({"next_eligible_at": r_vikram + timedelta(days=POLICY.no_show_cooldown_days)})
     
-    db.flush()
     db.commit()
 
 
