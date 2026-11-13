@@ -57,24 +57,35 @@ def seed(db, now: datetime):
     for sid, name, batch, days in [("stu_aarav", "Aarav Mehta", 2024, 2), ("stu_tanvi", "Tanvi Rao", 2024, 1), ("stu_harsh", "Harsh Patel", 2023, 6)]:
         note(sid, "skills_completed", messages.skills_completed(TRACK, BADGE), now - timedelta(days=days))
     student("stu_diya", "Diya Kapoor", 2025, "NOT_ELIGIBLE", 3); student("stu_ritu", "Ritu Sharma", 2025, "NOT_ELIGIBLE", 2)
+    # Create Students first
     student("stu_kabir", "Kabir Singh", 2024, "BOOKED")
     student("stu_neha", "Neha Joshi", 2024, "BOOKED")
     student("stu_dev", "Dev Malhotra", 2023, "BOOKED")
-    student("stu_meera", "Meera Iyer", 2024, "PASSED", badge_awarded_at=r)
-    student("stu_rohan", "Rohan Das", 2023, "FAILED", fail_count=1, next_eligible_at=r + timedelta(days=POLICY.fail_cooldown_days))
-    student("stu_sneha", "Sneha Reddy", 2024, "RETAKE_PENDING", next_eligible_at=r + timedelta(days=POLICY.retake_cooldown_days))
-    student("stu_vikram", "Vikram Bose", 2025, "RETAKE_PENDING", no_shows=1, next_eligible_at=r + timedelta(days=POLICY.no_show_cooldown_days))
+    student("stu_meera", "Meera Iyer", 2024, "PASSED")
+    student("stu_rohan", "Rohan Das", 2023, "FAILED", fail_count=1)
+    student("stu_sneha", "Sneha Reddy", 2024, "RETAKE_PENDING")
+    student("stu_vikram", "Vikram Bose", 2025, "RETAKE_PENDING", no_shows=1)
+    student("stu_ishaan", "Ishaan Verma", 2023, "NULLIFIED", nullified_at=now - timedelta(days=1), state_reason="Answers were read from a hidden second screen.")
+    student("stu_ananya", "Ananya Gupta", 2024, "ON_HOLD", state_reason="Contest submission matched another student.")
     db.flush()
-    b, sl = book("stu_kabir", "iv_priya", at(1, 11), "active")
+
+    # Then Bookings and Interviews
+    b_kabir, sl_kabir = book("stu_kabir", "iv_priya", at(1, 11), "active")
     soon = (now + timedelta(minutes=40)).replace(second=0, microsecond=0); soon += timedelta(minutes=(30 - soon.minute % 30) % 30)
     book("stu_neha", "iv_rahul", soon, "active")
     book("stu_dev", "iv_sana", at(-2, 17), "active")
-    b, sl = book("stu_meera", "iv_priya", at(-3, 11), "completed"); r = result(b, sl, "pass", "Strong fundamentals.")
-    b, sl = book("stu_rohan", "iv_rahul", at(-2, 12), "completed"); r = result(b, sl, "fail", "Revisit state management and error handling.")
-    b, sl = book("stu_sneha", "iv_sana", at(-1, 16, 30), "completed"); r = result(b, sl, "retake", "Solid UI work. Revisit prompt design and evaluation basics.")
-    b, sl = book("stu_vikram", "iv_priya", at(-1, 10, 30), "no_show"); r = result(b, sl, "no_show")
-    student("stu_ishaan", "Ishaan Verma", 2023, "NULLIFIED", nullified_at=now - timedelta(days=1), state_reason="Answers were read from a hidden second screen.")
-    student("stu_ananya", "Ananya Gupta", 2024, "ON_HOLD", state_reason="Contest submission matched another student.")
+    
+    b_meera, sl_meera = book("stu_meera", "iv_priya", at(-3, 11), "completed"); r_meera = result(b_meera, sl_meera, "pass", "Strong fundamentals.")
+    b_rohan, sl_rohan = book("stu_rohan", "iv_rahul", at(-2, 12), "completed"); r_rohan = result(b_rohan, sl_rohan, "fail", "Revisit state management and error handling.")
+    b_sneha, sl_sneha = book("stu_sneha", "iv_sana", at(-1, 16, 30), "completed"); r_sneha = result(b_sneha, sl_sneha, "retake", "Solid UI work. Revisit prompt design and evaluation basics.")
+    b_vikram, sl_vikram = book("stu_vikram", "iv_priya", at(-1, 10, 30), "no_show"); r_vikram = result(b_vikram, sl_vikram, "no_show")
+
+    # Update Student fields with results
+    db.query(Student).filter(Student.id == "stu_meera").update({"badge_awarded_at": r_meera})
+    db.query(Student).filter(Student.id == "stu_rohan").update({"next_eligible_at": r_rohan + timedelta(days=POLICY.fail_cooldown_days)})
+    db.query(Student).filter(Student.id == "stu_sneha").update({"next_eligible_at": r_sneha + timedelta(days=POLICY.retake_cooldown_days)})
+    db.query(Student).filter(Student.id == "stu_vikram").update({"next_eligible_at": r_vikram + timedelta(days=POLICY.no_show_cooldown_days)})
+    db.flush()
 
 
 if __name__ == "__main__":
