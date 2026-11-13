@@ -13,7 +13,7 @@ from .config import settings
 from .db import get_db
 from .schemas import AvailabilityIn, BookIn, FlagIn, OutcomeIn, RemindIn, RescheduleIn, SkillIn
 
-router = APIRouter(prefix="/api")
+router = APIRouter()
 
 
 def get_now(x_demo_offset_minutes: int | None = Header(default=None)) -> datetime:
@@ -123,7 +123,7 @@ def ai_reminder(body: dict, db: Session = Depends(get_db), now: datetime = Depen
 
 
 # ---- demo helpers (only when DEMO_MODE=1)
-demo = APIRouter(prefix="/api/demo")
+demo = APIRouter(prefix="/demo")
 
 
 @demo.post("/reset")

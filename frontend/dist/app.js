@@ -24720,7 +24720,9 @@
 
   // src/store.js
   var import_react = __toESM(require_react(), 1);
+  var import_meta = {};
   var KEY = "grit.demo.v2";
+  var UI_KEY = "grit.ui";
   var safe = (f) => {
     try {
       return f();
@@ -24728,26 +24730,44 @@
       return null;
     }
   };
-  var fresh = () => tick(seedState());
+  var getApiBase = () => {
+    if (typeof window !== "undefined") {
+      if (window.VITE_API_URL) return window.VITE_API_URL;
+      if (window.GRIT_CONFIG?.apiUrl) return window.GRIT_CONFIG.apiUrl;
+    }
+    if (typeof import_meta !== "undefined" && import_meta.env?.VITE_API_URL) {
+      return import_meta.env.VITE_API_URL;
+    }
+    return "http://localhost:8000";
+  };
+  var ui = {
+    role: "student",
+    studentId: "stu_aarav",
+    interviewerId: "iv_priya",
+    ...safe(() => JSON.parse(localStorage.getItem(UI_KEY + ".ui"))) || {},
+    toast: null
+  };
   var state = safe(() => {
     const v = JSON.parse(localStorage.getItem(KEY));
     return v?.meta?.version === 1 ? tick(v) : null;
-  }) || fresh();
-  var ui = { role: "student", studentId: "stu_aarav", interviewerId: "iv_priya", ...safe(() => JSON.parse(localStorage.getItem(KEY + ".ui"))) || {}, toast: null };
+  }) || tick(seedState());
   var snap = { state, ui };
   var subs = /* @__PURE__ */ new Set();
   var emit = () => {
     snap = { state, ui };
     safe(() => {
       localStorage.setItem(KEY, JSON.stringify(state));
-      localStorage.setItem(KEY + ".ui", JSON.stringify(ui));
+      localStorage.setItem(UI_KEY + ".ui", JSON.stringify(ui));
     });
     subs.forEach((f) => f());
   };
-  var useApp = () => (0, import_react.useSyncExternalStore)((f) => {
-    subs.add(f);
-    return () => subs.delete(f);
-  }, () => snap);
+  var useApp = () => (0, import_react.useSyncExternalStore)(
+    (f) => {
+      subs.add(f);
+      return () => subs.delete(f);
+    },
+    () => snap
+  );
   var t;
   function toast(msg, tone = "ok") {
     ui = { ...ui, toast: { msg, tone } };
@@ -24761,31 +24781,98 @@
   var setUI = (p) => {
     ui = { ...ui, ...p };
     emit();
+    refreshState();
   };
-  function act(fn, args, okMsg) {
-    try {
-      const r = fn(state, args);
-      state = r.state;
-      emit();
-      if (okMsg) toast(typeof okMsg === "function" ? okMsg(r.result) : okMsg);
-      return { ok: true, result: r.result };
-    } catch (e) {
-      if (e instanceof RuleError) {
-        toast(e.message, "bad");
-        return { ok: false, error: e };
+  async function refreshState() {
+    const base = getApiBase();
+    let url = "";
+    if (ui.role === "student") {
+      url = `${base}/api/students/${ui.studentId}/dashboard`;
+    } else if (ui.role === "team") {
+      url = `${base}/api/team/overview`;
+    } else if (ui.role === "interviewer") {
+      const todayStr = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+      url = `${base}/api/interviewers/${ui.interviewerId}/schedule?day=${todayStr}`;
+    }
+    if (url) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          state = tick({ ...state, ...data });
+          emit();
+        } else {
+          const error = await response.json().catch(() => ({}));
+          toast(error.message || "Failed to load data from server", "bad");
+        }
+      } catch (e) {
+        console.error("Fetch error:", e);
+        state = tick(state);
+        emit();
       }
-      throw e;
     }
   }
-  var resetDemo = () => {
-    state = fresh();
-    emit();
-    toast("Demo data reset");
-  };
-  setInterval(() => {
-    state = tick(state);
-    emit();
-  }, 3e4);
+  async function act(actionOrEndpoint, methodOrArgs = "POST", data = null, okMsg) {
+    const base = getApiBase();
+    if (typeof actionOrEndpoint === "function") {
+      try {
+        const r = actionOrEndpoint(state, methodOrArgs);
+        state = tick(r.state);
+        emit();
+        const message = data || okMsg;
+        if (message) toast(typeof message === "function" ? message(r.result) : message);
+        refreshState();
+        return { ok: true, result: r.result };
+      } catch (e) {
+        if (e instanceof RuleError) {
+          toast(e.message, "bad");
+          return { ok: false, error: e };
+        }
+        throw e;
+      }
+    }
+    const endpoint = actionOrEndpoint;
+    const method = typeof methodOrArgs === "string" ? methodOrArgs.toUpperCase() : "POST";
+    const payload = typeof methodOrArgs === "object" && methodOrArgs !== null && !Array.isArray(methodOrArgs) ? methodOrArgs : data;
+    const successMessage = typeof methodOrArgs === "string" ? data : okMsg;
+    try {
+      const options = {
+        method,
+        headers: { "content-type": "application/json" }
+      };
+      if (payload) {
+        options.body = JSON.stringify(payload);
+      }
+      const response = await fetch(`${base}/api/${endpoint}`, options);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        toast(error.message || "Action failed", "bad");
+        return { ok: false, error };
+      }
+      const result = await response.json();
+      await refreshState();
+      if (successMessage) toast(typeof successMessage === "function" ? successMessage(result) : successMessage);
+      return { ok: true, result };
+    } catch (e) {
+      toast(e.message || "An error occurred", "bad");
+      return { ok: false, error: e };
+    }
+  }
+  async function resetDemo() {
+    const base = getApiBase();
+    try {
+      const response = await fetch(`${base}/api/demo/reset`, { method: "POST" });
+      if (response.ok) {
+        await refreshState();
+        toast("Demo data reset successfully");
+      } else {
+        toast("Failed to reset demo", "bad");
+      }
+    } catch (e) {
+      toast("Failed to reset demo on server", "bad");
+    }
+  }
+  refreshState();
 
   // src/ui.jsx
   var import_react2 = __toESM(require_react(), 1);
@@ -24935,7 +25022,7 @@
   function Team({ s }) {
     const o = teamOverview(s), now = nowOf(s), [flag, setFlag] = (0, import_react3.useState)(null), [reason, setReason] = (0, import_react3.useState)("");
     const remind = async (st) => {
-      const base = window.GRIT_CONFIG?.apiUrl;
+      const base = window.VITE_API_URL;
       let body = null;
       if (base) {
         try {

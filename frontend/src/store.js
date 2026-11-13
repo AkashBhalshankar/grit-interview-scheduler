@@ -7,11 +7,19 @@ const UI_KEY = 'grit.ui';
 const safe = (f) => { try { return f(); } catch { return null; } };
 
 const getApiBase = () => {
+  // 1. Check runtime window overrides first (if defined via config.js or Docker)
   if (typeof window !== 'undefined') {
     if (window.VITE_API_URL) return window.VITE_API_URL;
     if (window.GRIT_CONFIG?.apiUrl) return window.GRIT_CONFIG.apiUrl;
   }
-  return "https://grit-interview-scheduler-iw10.onrender.com";
+
+  // 2. Check Vite build-time environment variables (injected by Vercel from .env.production)
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // 3. Final fallback for local development
+  return "http://localhost:8000";
 };
 
 let ui = {
@@ -22,7 +30,6 @@ let ui = {
   toast: null
 };
 
-// Initialize with safe engine-tick state so App.jsx engine helper calls never crash
 let state = safe(() => {
   const v = JSON.parse(localStorage.getItem(KEY));
   return v?.meta?.version === 1 ? E.tick(v) : null;
@@ -79,7 +86,6 @@ export async function refreshState() {
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        // Merge server data while keeping engine structural properties intact
         state = E.tick({ ...state, ...data });
         emit();
       } else {
@@ -94,15 +100,42 @@ export async function refreshState() {
   }
 }
 
-export async function act(endpoint, method = 'POST', data = null, okMsg) {
+// Dual-mode act: handles both legacy engine functions and direct endpoint strings safely
+export async function act(actionOrEndpoint, methodOrArgs = 'POST', data = null, okMsg) {
   const base = getApiBase();
+
+  // Mode 1: Legacy engine function passed (e.g. act(E.bookSlot, { slotId }))
+  if (typeof actionOrEndpoint === 'function') {
+    try {
+      const r = actionOrEndpoint(state, methodOrArgs);
+      state = E.tick(r.state);
+      emit();
+      const message = data || okMsg;
+      if (message) toast(typeof message === 'function' ? message(r.result) : message);
+      refreshState(); // Sync with backend in background
+      return { ok: true, result: r.result };
+    } catch (e) {
+      if (e instanceof E.RuleError) {
+        toast(e.message, 'bad');
+        return { ok: false, error: e };
+      }
+      throw e;
+    }
+  }
+
+  // Mode 2: Direct backend endpoint string call
+  const endpoint = actionOrEndpoint;
+  const method = typeof methodOrArgs === 'string' ? methodOrArgs.toUpperCase() : 'POST';
+  const payload = typeof methodOrArgs === 'object' && methodOrArgs !== null && !Array.isArray(methodOrArgs) ? methodOrArgs : data;
+  const successMessage = typeof methodOrArgs === 'string' ? data : okMsg;
+
   try {
     const options = {
       method,
       headers: { 'content-type': 'application/json' },
     };
-    if (data) {
-      options.body = JSON.stringify(data);
+    if (payload) {
+      options.body = JSON.stringify(payload);
     }
     const response = await fetch(`${base}/api/${endpoint}`, options);
 
@@ -114,7 +147,7 @@ export async function act(endpoint, method = 'POST', data = null, okMsg) {
 
     const result = await response.json();
     await refreshState();
-    if (okMsg) toast(typeof okMsg === 'function' ? okMsg(result) : okMsg);
+    if (successMessage) toast(typeof successMessage === 'function' ? successMessage(result) : successMessage);
     return { ok: true, result };
   } catch (e) {
     toast(e.message || "An error occurred", 'bad');
