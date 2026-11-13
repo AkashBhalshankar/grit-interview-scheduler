@@ -56,7 +56,7 @@ function Outcome({ row, interviewerId, now, onClose }) {
 export function Team({ s }) {
   const o = E.teamOverview(s), now = E.nowOf(s), [flag, setFlag] = useState(null), [reason, setReason] = useState('');
   const remind = async (st) => {
-    const base = window.GRIT_CONFIG?.apiUrl; let body = null;
+    const base = window.VITE_API_URL; let body = null;
     if (base) { try { const r = await fetch(`${base}/api/ai/reminder`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ student_id: st.id }) }); body = (await r.json()).body; } catch { /* template fallback */ } }
     act(E.sendReminder, { studentId: st.id, body }, 'Reminder sent');
   };
